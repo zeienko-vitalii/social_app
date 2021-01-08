@@ -19,9 +19,7 @@ abstract class BaseStateWithBloc<T extends StatefulWidget, B extends BaseBloc> e
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
       appBar: appBar,
-      // backgroundColor: Colors.white,
       body: getWidget(context),
     );
   }

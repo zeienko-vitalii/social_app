@@ -6,6 +6,7 @@ class SocialApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SocialApp',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,

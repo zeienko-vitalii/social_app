@@ -15,7 +15,7 @@ class MainScreen extends StatelessWidget {
     initScreenUtil(context);
     return BlocProvider<MainBloc>(
       create: (BuildContext context) => MainBloc(),
-      child: MainComponent(),
+      child: const MainComponent(),
     );
   }
 }

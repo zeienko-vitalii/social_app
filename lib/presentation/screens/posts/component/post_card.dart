@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:social_app_demo/data/net/models/response/comment/comment.dart';
 import 'package:social_app_demo/data/net/models/response/post/post.dart';
 import 'package:social_app_demo/presentation/appearance/common_widgets/common_widgets.dart';
@@ -24,15 +23,13 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
   BoxDecoration get _cardDecoration => BoxDecoration(
         color: Colors.white,
         borderRadius: !_isSubComponentOpen
-            ? _defaultBorderRadius
+            ? BorderRadius.circular(10.w)
             : BorderRadius.only(
                 topLeft: Radius.circular(10.w),
                 topRight: Radius.circular(10.w),
               ),
         boxShadow: _defaultShadow,
       );
-
-  BorderRadius get _defaultBorderRadius => BorderRadius.circular(10.w);
 
   List<BoxShadow> get _defaultShadow => const <BoxShadow>[
         BoxShadow(
@@ -48,9 +45,6 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
           spreadRadius: 1,
         ),
       ];
-
-  // AnimationController _animationController;
-  // Animation<double> _commentPositionAnimation;
 
   @override
   Widget build(BuildContext context) {
@@ -75,47 +69,57 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
     );
   }
 
-  Container _card() {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        children: <Widget>[
-          Container(
-            height: 182.h,
-            margin: EdgeInsets.only(top: 10.h, bottom: 0.h),
-            padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 18.h),
-            decoration: _cardDecoration,
-            child: Column(
-              children: <Widget>[
-                Text(
-                  widget.post?.title?.toUpperCase() ?? '',
-                  style: GoogleFonts.ibmPlexMono(
-                    fontSize: textSize_15,
-                    fontWeight: FontWeight.bold,
+  Widget _card() {
+    return GestureDetector(
+      onTap: () {
+        if (_isSubComponentOpen) {
+          context.read<PostCardBloc>().add(PostCardInitialEvent());
+        } else {
+          context.read<PostCardBloc>().add(GetPostCommentsEvent(widget.post?.id));
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 20.w),
+        child: Column(
+          children: <Widget>[
+            Container(
+              height: 182.h,
+              margin: EdgeInsets.only(top: 10.h, bottom: 0.h),
+              padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
+              decoration: _cardDecoration,
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    widget.post?.title?.toUpperCase() ?? '',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: textSize_15,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 24.w),
-                  height: 0.5.h,
-                  color: Colors.black87,
-                ),
-                Text(
-                  widget.post?.body?.replaceAll('\n', ' ')?.replaceAll('\r', ' ') ?? '',
-                  style: TextStyle(
-                    fontSize: textSize_14,
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 24.w),
+                    height: 0.5.h,
                     color: Colors.black87,
                   ),
-                ),
-              ],
+                  Text(
+                    widget.post?.body?.replaceAll('\n', ' ')?.replaceAll('\r', ' ') ?? '',
+                    style: TextStyle(
+                      fontSize: textSize_14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          _isSubComponentOpen ? _animatedSubComponentsContainer() : Container(),
-        ],
+            _commentsWidget(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _animatedSubComponentsContainer() {
+  Widget _commentsWidget() {
     final CommentContainer commentContainer = context.select<PostCardBloc, CommentContainer>((PostCardBloc bloc) {
       final BaseBlocState state = bloc.state;
       if (state is GetCommentsState) {
@@ -123,26 +127,38 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
       }
       return null;
     });
-    final List<Comment> comments = commentContainer?.comments?.reversed?.toList()?.take(3)?.toList();
-    return comments?.isNotEmpty ?? false
-        ? Container(
-            decoration: BoxDecoration(boxShadow: _defaultShadow),
-            child: ListView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: comments.length,
-              itemBuilder: (BuildContext context, int index) {
-                return _commentItem(comment: comments[index], isLastItem: index == comments.length - 1);
-              },
-            ),
+    final List<Comment> comments = (commentContainer ?? context.watch<PostCardBloc>().commentContainer)
+        ?.comments
+        ?.reversed
+        ?.toList()
+        ?.take(3)
+        ?.toList();
+    final List<Widget> commentsWidget = List<Widget>.filled(3, _commentItem(), growable: true);
+    if (comments?.isNotEmpty ?? false) {
+      commentsWidget.clear();
+      for (int i = 0; i < comments.length; i++) {
+        commentsWidget.add(_commentItem(comment: comments[i], isLastItem: i == comments.length - 1));
+      }
+    }
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.grey[300],
+            offset: const Offset(4, 4),
+            blurRadius: 18,
+            spreadRadius: 1,
           )
-        : Container();
+        ],
+      ),
+      child: CommentsBlock(commentContainer: commentsWidget, isOpen: _isSubComponentOpen),
+    );
   }
 
   Widget _commentItem({Comment comment, bool isLastItem = false}) {
     return Container(
       margin: EdgeInsetsDirectional.only(top: 1.h),
-      padding: EdgeInsetsDirectional.only(top: 8.h, start: 12.h, end: 12.h),
+      padding: EdgeInsetsDirectional.only(top: 8.h, start: 18.h, end: 18.h),
       height: 140.h,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -163,7 +179,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                 children: <TextSpan>[
                   TextSpan(
                     text: '${comment?.name ?? ''}: ',
-                    style: GoogleFonts.robotoMono(
+                    style: TextStyle(
                       fontSize: textSize_14,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -173,7 +189,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                     text: comment?.body ?? '',
                     style: TextStyle(
                       fontSize: textSize_14,
-                      fontWeight: FontWeight.w300,
+                      // fontWeight: FontWeight.w300,
                       color: Colors.black87,
                     ),
                   )
@@ -220,12 +236,72 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
   }
 }
 
-class AnimatedComments extends StatelessWidget {
-  const AnimatedComments({Key key, this.commentContainer}) : super(key: key);
-  final CommentContainer commentContainer;
+class CommentsBlock extends StatefulWidget {
+  const CommentsBlock({Key key, this.commentContainer, this.isOpen}) : super(key: key);
+  final List<Widget> commentContainer;
+  final bool isOpen;
+
+  @override
+  _CommentsBlockState createState() => _CommentsBlockState();
+}
+
+class _CommentsBlockState extends State<CommentsBlock> with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+  List<Widget> _entries;
+  double _height = 0;
+  static const double padding = 42.0;
+
+  double get openHeight =>
+      widget.commentContainer.fold<double>(0.0, (double val, _) => val + 140) + _CommentsBlockState.padding * 2;
+
+  bool get isOpen => widget.isOpen;
+
+  double get closedHeight => 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this);
+    _controller.addListener(_tick);
+    _updateFromWidget();
+  }
+
+  @override
+  void didUpdateWidget(CommentsBlock oldWidget) {
+    // Opens or closes the ticked if the status changed
+    _updateFromWidget();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Container(
+      height: openHeight * _height,
+      child: Column(
+        children: _entries
+            .map((Widget e) => Flexible(
+                  child: e,
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  void _updateFromWidget() {
+    _entries = widget.commentContainer;
+    _controller.duration = Duration(milliseconds: 200 * (_entries.length - 1));
+    isOpen ? _controller.forward() : _controller.reverse();
+  }
+
+  void _tick() {
+    setState(() {
+      _height = Curves.easeInQuad.transform(_controller.value);
+    });
   }
 }

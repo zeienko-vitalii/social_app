@@ -25,7 +25,7 @@ abstract class BaseBloc extends Bloc<BaseEvent, BaseBlocState> {
     if (error is ApiError) {
       return ApiErrorState(error);
     } else {
-      return ErrorState();
+      return const ErrorState();
     }
   }
 }

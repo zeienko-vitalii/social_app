@@ -81,7 +81,7 @@ class _PostsComponentState extends BaseStateWithBloc<PostsComponent, PostBloc> {
           child: Container(
             height: 54.h,
             margin: EdgeInsets.symmetric(vertical: 16.h),
-            padding: EdgeInsetsDirectional.only(start: 18.h),
+            padding: EdgeInsetsDirectional.only(start: 18.h, end: 4.h),
             alignment: AlignmentDirectional.centerStart,
             decoration: BoxDecoration(
               color: Colors.lightBlueAccent.withOpacity(0.8),

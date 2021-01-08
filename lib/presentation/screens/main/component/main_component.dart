@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:social_app_demo/data/net/models/response/user/user.dart';
 import 'package:social_app_demo/presentation/appearance/common_widgets/common_widgets.dart';
 import 'package:social_app_demo/presentation/appearance/styles/dimens.dart';
@@ -21,6 +20,8 @@ class MainComponent extends StatefulWidget {
 }
 
 class _MainComponentState extends BaseStateWithBloc<MainComponent, MainBloc> {
+  List<Color> get _userAvatarPlaceholders => Colors.accents.take(10).toList();
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +39,6 @@ class _MainComponentState extends BaseStateWithBloc<MainComponent, MainBloc> {
   Widget getWidget(BuildContext context) {
     return BlocBuilder<MainBloc, BaseBlocState>(
       builder: (BuildContext context, BaseBlocState state) {
-        print('STATE: $state');
         final UserContainer userContainer = state is GetUsersState ? state.userContainer : null;
         final bool isSuccess = userContainer != null;
         final bool isError = state is ErrorState || state is ApiErrorState;
@@ -63,18 +63,17 @@ class _MainComponentState extends BaseStateWithBloc<MainComponent, MainBloc> {
       child: ListView.builder(
         itemCount: userContainer.users.length,
         itemBuilder: (BuildContext context, int index) {
-          return _userItem(userContainer.users[index]);
+          return _userItem(index, userContainer.users[index]);
         },
       ),
     );
   }
 
-  Widget _userItem(User user, {bool isShimmer = false}) {
+  Widget _userItem(int index, User user) {
     return InkWell(
       onTap: () => NavigatorUtils.goToPostsScreen(context, user),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-        // padding: const EdgeInsets.all(8.0),
         child: Container(
           height: 54.h,
           decoration: BoxDecoration(
@@ -91,25 +90,34 @@ class _MainComponentState extends BaseStateWithBloc<MainComponent, MainBloc> {
           ),
           child: Padding(
             padding: const EdgeInsetsDirectional.only(start: 8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: <Widget>[
                 HeroAnimUtility.heroWrap(
-                  Text(
-                    user?.name ?? '',
-                    style: GoogleFonts.robotoMono(
-                      fontSize: textSize_16,
-                    ),
-                  ),
-                  HeroAnimUtility.tag(user?.id?.toString()),
+                  _avatarPlaceholder(index),
+                  HeroAnimUtility.tag(user?.id?.toString(), mark: 'color'),
                 ),
-                const Indent(top: 1),
-                Text(
-                  user?.email ?? '',
-                  style: GoogleFonts.sourceCodePro(
-                    fontSize: textSize_12,
-                  ),
+                const Indent(start: 12),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    HeroAnimUtility.heroWrap(
+                      Text(
+                        user?.name ?? '',
+                        style: GoogleFonts.robotoMono(
+                          fontSize: textSize_16,
+                        ),
+                      ),
+                      HeroAnimUtility.tag(user?.id?.toString()),
+                    ),
+                    const Indent(top: 1),
+                    Text(
+                      user?.email ?? '',
+                      style: GoogleFonts.sourceCodePro(
+                        fontSize: textSize_12,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -118,14 +126,15 @@ class _MainComponentState extends BaseStateWithBloc<MainComponent, MainBloc> {
       ),
     );
   }
-}
 
-extension WithShimmer on Widget {
-  Widget useShimmer({bool isOn = true, Gradient gradient}) {
-    return Shimmer(
-      child: this,
-      gradient: gradient,
-      period: const Duration(milliseconds: 300),
+  Widget _avatarPlaceholder(int index) {
+    return Container(
+      width: 48.w,
+      height: 48.h,
+      decoration: BoxDecoration(
+        color: _userAvatarPlaceholders[index % 10],
+        shape: BoxShape.circle,
+      ),
     );
   }
 }

@@ -28,11 +28,7 @@ class _PostsComponentState extends BaseStateWithBloc<PostsComponent, PostBloc> {
   }
 
   @override
-  Widget get appBar => AppBar(
-        title: const Text(
-          'Posts',
-        ),
-      );
+  Widget get appBar => AppBar(title: const Text('Posts'));
 
   @override
   Widget getWidget(BuildContext context) {

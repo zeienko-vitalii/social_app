@@ -20,8 +20,8 @@ class Indent extends StatelessWidget {
       );
 }
 
-Widget loaderWidget({Key key}) {
-  return Center(key: key, child: const CupertinoActivityIndicator());
+Widget loaderWidget() {
+  return const Center(child: CupertinoActivityIndicator());
 }
 
 Widget error() {

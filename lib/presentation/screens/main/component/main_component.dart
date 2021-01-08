@@ -29,11 +29,7 @@ class _MainComponentState extends BaseStateWithBloc<MainComponent, MainBloc> {
   }
 
   @override
-  Widget get appBar => AppBar(
-        title: const Text(
-          'SocialApp',
-        ),
-      );
+  Widget get appBar => AppBar(title: const Text('SocialApp'));
 
   @override
   Widget getWidget(BuildContext context) {
@@ -57,9 +53,7 @@ class _MainComponentState extends BaseStateWithBloc<MainComponent, MainBloc> {
 
   Widget _usersListView(UserContainer userContainer) {
     return RefreshIndicator(
-      onRefresh: () async {
-        bloc.add(GetAllUsersEvent());
-      },
+      onRefresh: () async => bloc.add(GetAllUsersEvent()),
       child: ListView.builder(
         itemCount: userContainer.users.length,
         itemBuilder: (BuildContext context, int index) {
@@ -92,10 +86,7 @@ class _MainComponentState extends BaseStateWithBloc<MainComponent, MainBloc> {
             padding: const EdgeInsetsDirectional.only(start: 8.0),
             child: Row(
               children: <Widget>[
-                HeroAnimUtility.heroWrap(
-                  _avatarPlaceholder(index),
-                  HeroAnimUtility.tag(user?.id?.toString(), mark: 'color'),
-                ),
+                _avatarPlaceholder(index),
                 const Indent(start: 12),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -104,18 +95,14 @@ class _MainComponentState extends BaseStateWithBloc<MainComponent, MainBloc> {
                     HeroAnimUtility.heroWrap(
                       Text(
                         user?.name ?? '',
-                        style: GoogleFonts.robotoMono(
-                          fontSize: textSize_16,
-                        ),
+                        style: TextStyle(fontSize: textSize_16),
                       ),
                       HeroAnimUtility.tag(user?.id?.toString()),
                     ),
                     const Indent(top: 1),
                     Text(
                       user?.email ?? '',
-                      style: GoogleFonts.sourceCodePro(
-                        fontSize: textSize_12,
-                      ),
+                      style: GoogleFonts.sourceCodePro(fontSize: textSize_12),
                     ),
                   ],
                 ),

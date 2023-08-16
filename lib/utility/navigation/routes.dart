@@ -14,7 +14,11 @@ class Routes {
     }
   }
 
-  static Route<dynamic> _materialRouteToScreen(Widget screen, [RouteSettings settings]) => MaterialPageRoute<dynamic>(
+  static Route<dynamic> _materialRouteToScreen(
+    Widget screen, [
+    RouteSettings? settings,
+  ]) =>
+      MaterialPageRoute<dynamic>(
         builder: (_) => screen,
         settings: settings,
       );

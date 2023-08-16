@@ -1,89 +1,67 @@
-import '../json_convertible.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class UserContainer {
-  UserContainer(this.users);
+part 'user.g.dart';
+part 'user.freezed.dart';
 
-  UserContainer.fromJsonList(List<dynamic> data)
-      : users = List<User>.from(
-          data
-                  ?.map<User>(
-                    (dynamic e) => User.fromJson(
-                      Map<String, dynamic>.from(e),
-                    ),
-                  )
-                  ?.toList() ??
-              const <User>[],
-        );
+@freezed
+class UserContainer with _$UserContainer {
+  const factory UserContainer({
+    @Default(<User>[]) List<User> users,
+  }) = _UserContainer;
 
-  final List<User> users;
+  factory UserContainer.fromJson(Map<String, dynamic> json) =>
+      _$UserContainerFromJson(json);
 }
 
-class User extends ApiJsonConvertible {
-  User({this.name, this.email, this.id, this.username, this.phone, this.website, this.address, this.company})
-      : super.fromJson(null);
+@freezed
+class User with _$User {
+  const factory User({
+    required int id,
+    required String name,
+    required String username,
+    required String email,
+    required String phone,
+    required String website,
+    required UserAddress address,
+    required UserCompany company,
+  }) = _User;
 
-  User.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        name = json['name'],
-        username = json['username'],
-        email = json['email'],
-        phone = json['phone'],
-        website = json['website'],
-        address = json['address'] != null ? UserAddress.fromJson(json['address']) : null,
-        company = json['company'] != null ? UserCompany.fromJson(json['company']) : null,
-        super.fromJson(json);
-
-  final int id;
-  final String name, username, email, phone, website;
-  final UserAddress address;
-  final UserCompany company;
-
-  @override
-  String toString() {
-    return 'UserEntity{id: $id, name: $name, username: $username, email: $email, phone: $phone, website: $website, address: $address, company: $company}';
-  }
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 }
 
-class UserAddress extends ApiJsonConvertible {
-  UserAddress.fromJson(Map<String, dynamic> json)
-      : street = json['street'],
-        suite = json['suite'],
-        city = json['city'],
-        zipcode = json['zipcode'],
-        geo = json['geo'] != null ? UserAddressGeo.fromJson(json['geo']) : null,
-        super.fromJson(json);
-  final String street, suite, city, zipcode;
-  final UserAddressGeo geo;
+@freezed
+class UserAddress with _$UserAddress {
+  const factory UserAddress({
+    required String street,
+    required String suite,
+    required String city,
+    required String zipcode,
+    UserAddressGeo? geo,
+  }) = _UserAddress;
 
-  @override
-  String toString() {
-    return 'UserAddress{street: $street, suite: $suite, city: $city, zipcode: $zipcode, geo: $geo}';
-  }
+  factory UserAddress.fromJson(Map<String, dynamic> json) =>
+      _$UserAddressFromJson(json);
 }
 
-class UserAddressGeo extends ApiJsonConvertible {
-  UserAddressGeo.fromJson(Map<String, dynamic> json)
-      : lat = json['lat'],
-        lng = json['lng'],
-        super.fromJson(json);
-  final String lat, lng;
+@freezed
+class UserAddressGeo with _$UserAddressGeo {
+  const factory UserAddressGeo({
+    required String lat,
+    required String lng,
+  }) = _UserAddressGeo;
 
-  @override
-  String toString() {
-    return 'UserAddressGeo{lat: $lat, lng: $lng}';
-  }
+  factory UserAddressGeo.fromJson(Map<String, dynamic> json) =>
+      _$UserAddressGeoFromJson(json);
 }
 
-class UserCompany extends ApiJsonConvertible {
-  UserCompany.fromJson(Map<String, dynamic> json)
-      : name = json['name'],
-        catchPhrase = json['catchPhrase'],
-        bs = json['bs'],
-        super.fromJson(json);
-  final String name, catchPhrase, bs;
+@freezed
+class UserCompany with _$UserCompany {
+  const factory UserCompany({
+    required String name,
+    required String catchPhrase,
+    required String bs,
+  }) = _UserCompany;
 
-  @override
-  String toString() {
-    return 'UserCompany{name: $name, catchPhrase: $catchPhrase, bs: $bs}';
-  }
+  factory UserCompany.fromJson(Map<String, dynamic> json) =>
+      _$UserCompanyFromJson(json);
 }

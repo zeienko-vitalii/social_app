@@ -1,29 +1,26 @@
-import 'package:social_app_demo/data/net/models/response/json_convertible.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class PostContainer {
-  PostContainer.fromJsonList(List<dynamic> data)
-      : posts = List<Post>.from(
-          data
-                  ?.map<Post>(
-                    (dynamic e) => Post.fromJson(
-                      Map<String, dynamic>.from(e),
-                    ),
-                  )
-                  ?.toList() ??
-              const <Post>[],
-        );
+part 'post.g.dart';
+part 'post.freezed.dart';
 
-  final List<Post> posts;
+@freezed
+class PostContainer with _$PostContainer {
+  const factory PostContainer({
+    required List<Post> posts,
+  }) = _PostContainer;
+
+  factory PostContainer.fromJson(Map<String, dynamic> json) =>
+      _$PostContainerFromJson(json);
 }
 
-class Post extends ApiJsonConvertible {
-  Post.fromJson(Map<String, dynamic> json)
-      : userId = json['userId'],
-        id = json['id'],
-        title = json['title'],
-        body = json['body'],
-        super.fromJson(json);
+@freezed
+class Post with _$Post {
+  const factory Post({
+    required int userId,
+    required int id,
+    String? title,
+    String? body,
+  }) = _Post;
 
-  final int userId, id;
-  final String title, body;
+  factory Post.fromJson(Map<String, dynamic> json) => _$PostFromJson(json);
 }

@@ -1,81 +1,136 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:social_app_demo/data/net/models/api/api_response.dart';
-import 'package:social_app_demo/utility/logger/logger_service.dart';
 
-/// Keeps Dio client and provides functionality to make network requests
+typedef LogCallback = void Function([Object error, StackTrace? stackTrace]);
+
 class DioClient {
   factory DioClient() {
     if (_instance == null) {
       throw Exception('Use DioClient.init(...) before accesing it.');
     }
-    return _instance;
+    return _instance!;
   }
 
-  DioClient.init(String baseUrl) {
+  DioClient.init(
+    String baseUrl, {
+    Map<String, String>? headerParams,
+    this.logError,
+    this.logDebugMessage,
+  }) {
     if (_instance == null) {
+      _client.applyDefaultOptions(baseUrl, headerParams: headerParams);
       _instance = this;
-      _client = Dio();
-      _client.options.baseUrl = baseUrl;
-      _client.options.contentType = ContentType.json.toString();
-      _client.options.headers['Accept'] = ContentType.json.toString();
-      _client.options.connectTimeout = 10000; //10s
-      _client.options.receiveTimeout = 20000; // 20s
     }
   }
 
-  static DioClient _instance;
-  Dio _client;
+  static DioClient? _instance;
+  late final Dio _client = Dio();
+  final LogCallback? logError;
+  final LogCallback? logDebugMessage;
 
-  Future<ApiResponse> httpCall(
+  void dispose() {
+    _client.close();
+  }
+
+  Future<ApiResponse> download(String urlPath, String savePath) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final path = '${dir.path}/$savePath';
+    try {
+      final response = await _client.download(urlPath, path);
+      return ApiResponse(response);
+    } on DioException catch (e) {
+      return Future<ApiResponse>.error(_getAndPrintHttpError(e));
+    }
+  }
+
+  Future<ApiResponse?> httpCall(
     String path,
-    HTTP_METHOD httpMethod, {
-    Map<String, dynamic> queryParameters,
-    Map<String, dynamic> data,
-    FormData formData,
+    HttpMethod httpMethod, {
+    FormData? formData,
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
   }) async {
     try {
       Response<dynamic> response;
+
+      final pathWithBase = _client.options.baseUrl + path;
+
       switch (httpMethod) {
-        case HTTP_METHOD.GET:
-          response = await _client.get<dynamic>(path, queryParameters: queryParameters);
-          break;
-        case HTTP_METHOD.POST:
-          response = await _client.post<dynamic>(path, data: formData ?? data, queryParameters: queryParameters);
-          break;
-        case HTTP_METHOD.PATCH:
-          response = await _client.patch<dynamic>(path, data: formData ?? data);
-          break;
-        case HTTP_METHOD.DELETE:
-          response = await _client.delete<dynamic>(path, queryParameters: queryParameters);
-          break;
-        case HTTP_METHOD.PUT:
-          response = await _client.put<dynamic>(path, queryParameters: queryParameters, data: formData ?? data);
-          break;
+        case HttpMethod.get:
+          response = await _client.get<dynamic>(
+            pathWithBase,
+            queryParameters: queryParameters,
+          );
+        case HttpMethod.post:
+          response = await _client.post<dynamic>(
+            pathWithBase,
+            data: formData ?? data,
+            queryParameters: queryParameters,
+          );
+        case HttpMethod.patch:
+          response = await _client.patch<dynamic>(
+            pathWithBase,
+            data: formData ?? data,
+          );
+        case HttpMethod.delete:
+          response = await _client.delete<dynamic>(
+            pathWithBase,
+            queryParameters: queryParameters,
+          );
+        case HttpMethod.put:
+          response = await _client.put<dynamic>(
+            pathWithBase,
+            queryParameters: queryParameters,
+            data: formData ?? data,
+          );
       }
-      response.log();
+      _logResponse(response);
       return ApiResponse(response);
-    } on DioError catch (e) {
-      return Future<ApiResponse>.error(_getAndPrintHttpError(e: e));
+    } on DioException catch (e, stk) {
+      return Future<ApiResponse>.error(_getAndPrintHttpError(e, stk));
+    } catch (e, stk) {
+      logError?.call(e, stk);
+      return Future<ApiResponse>.error(
+        ApiError(
+          RequestOptions(
+            path: path,
+            method: httpMethod.toString(),
+          ),
+        ),
+      );
     }
   }
 
-  ApiError _getAndPrintHttpError({DioError e}) {
-    final ApiError ex = ApiError.fromDioError(e);
-    Log().e(ex);
+  ApiError _getAndPrintHttpError(DioException e, [StackTrace? stk]) {
+    final ex = ApiError.fromDioException(e);
+    logError?.call(ex, stk);
     return ex;
+  }
+
+  void _logResponse(Response<dynamic>? response) {
+    logDebugMessage?.call('Response: $response');
   }
 }
 
-enum HTTP_METHOD { GET, POST, PATCH, DELETE, PUT }
+enum HttpMethod { get, post, patch, delete, put }
 
-extension LogResponse on Response<dynamic> {
-  void log() {
-    final String requestString = 'path: ${request.path}, '
-        'httpMethod: ${request.method}, '
-        'queryParameters: ${request.queryParameters.toString()}, '
-        'data: ${request.data.toString()}';
-    Log().d('request: $requestString, response: ${toString()}');
+extension DioConfiguration on Dio {
+  void applyDefaultOptions(
+    String baseUrlStr, {
+    ContentType? type,
+    Map<String, String>? headerParams,
+  }) {
+    headerParams?.forEach((String key, String value) {
+      options.headers[key] = value;
+    });
+    options
+      ..baseUrl = baseUrlStr
+      ..contentType = (type?.toString() ?? ContentType.json.toString())
+      ..connectTimeout = const Duration(seconds: 20)
+      ..receiveTimeout = const Duration(seconds: 60)
+      ..validateStatus = (int? status) => status == 200;
   }
 }

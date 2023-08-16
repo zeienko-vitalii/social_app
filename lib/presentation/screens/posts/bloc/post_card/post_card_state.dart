@@ -1,12 +1,11 @@
 part of 'post_card_bloc.dart';
 
-@immutable
-abstract class PostCardState extends BaseBlocState {}
-
-class PostCardInitial extends PostCardState {}
-
-class GetCommentsState extends PostCardState {
-  GetCommentsState(this.commentContainer);
-
-  final CommentContainer commentContainer;
+@freezed
+class PostCardState {
+  const factory PostCardState.initial() = PostCardInitial;
+  const factory PostCardState.loading() = PostCardLoading;
+  const factory PostCardState.finishLoading() = PostCardLoadingFinished;
+  const factory PostCardState.getComments(CommentContainer commentContainer) =
+      GetCommentsState;
+  const factory PostCardState.error([String? msg]) = PostCardError;
 }

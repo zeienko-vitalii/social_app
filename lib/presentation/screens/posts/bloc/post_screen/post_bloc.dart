@@ -1,29 +1,38 @@
-import 'package:meta/meta.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:social_app_demo/data/net/api/api.dart';
 import 'package:social_app_demo/data/net/models/response/post/post.dart';
 import 'package:social_app_demo/data/net/models/response/user/user.dart';
-import 'package:social_app_demo/presentation/base/bloc/base_bloc.dart';
+import 'package:social_app_demo/utility/logger/logger_service.dart';
 
-part 'post_event.dart';
-
+part 'post_bloc.freezed.dart';
 part 'post_state.dart';
 
-class PostBloc extends BaseBloc {
-  PostBloc(this.user);
+class PostBloc extends Cubit<PostState> {
+  PostBloc(
+    this.api,
+    this.user,
+  ) : super(const PostState.initial());
 
-  final User user;
+  final User? user;
+  final Api api;
 
-  @override
-  Stream<BaseBlocState> mapChildEventToState(BaseEvent event) async* {
-    if (event is GetAllPostsEvent) {
-      yield await _getPosts();
-    } else {
-      yield LoadingState(event);
+  Future<void> getPosts() async {
+    try {
+      if (user == null) throw Exception('User id is null');
+
+      final container = await api.getPostsByUserId(user!.id);
+      if (container == null) throw Exception('Container is null');
+
+      emit(
+        PostState.getPost(container),
+      );
+    } catch (e, stk) {
+      Log().e(e, stk);
+
+      emit(
+        PostState.error(e.toString()),
+      );
     }
-  }
-
-  Future<BaseBlocState> _getPosts() {
-    return api.getPostsByUserId(user.id).then((PostContainer value) {
-      return GetPostsState(value);
-    }).catchError(handleApiError);
   }
 }

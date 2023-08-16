@@ -1,12 +1,8 @@
 part of 'post_bloc.dart';
 
-@immutable
-abstract class PostState extends BaseBlocState {}
-
-class PostInitial extends PostState {}
-
-class GetPostsState extends PostState {
-  GetPostsState(this.postContainer);
-
-  final PostContainer postContainer;
+@freezed
+class PostState {
+  const factory PostState.initial() = PostInitial;
+  const factory PostState.getPost(PostContainer container) = GetPostsState;
+  const factory PostState.error([String? msg]) = PostError;
 }
